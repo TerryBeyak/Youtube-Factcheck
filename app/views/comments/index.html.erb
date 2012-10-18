@@ -1,0 +1,23 @@
+<h1>Listing comments for <%=link_to @video.title, video_path(@video) %></h1>
+
+<table>
+  <tr>
+    <th>Time</th>
+    <th>Body</th>
+    <th>Posted by:</th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @comments.each do |comment| %>
+  <tr>
+    <td><p><%= Time.at(comment.time).gmtime.strftime('%R:%S') %></p></td>
+    <td><p><%= comment.body %></p></td>
+    <td><p><%= User.find(comment.user_id).username %></p></td>
+    <% if comment.user_id = current_user.id %>
+      <td><p><%= link_to 'Edit', edit_comment_path(comment) %></p></td>
+      <td><p><%= link_to 'Delete', comment, method: :delete, data: { confirm: 'Are you sure?' } %></p></td>
+    <% end %>
+  </tr>
+<% end %>
+</table>

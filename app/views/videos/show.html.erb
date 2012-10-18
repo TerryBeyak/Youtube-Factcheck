@@ -1,0 +1,144 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <h3><%= @video.title %></h3>
+</p>
+
+<p>
+  <b>Linked by:</b>
+  <%= @user.email %>
+</p>
+
+<!-- <p>
+  <b>Url:</b>
+  <%= @video.url %>
+</p> -->
+
+<div id="ytapiplayer">
+    You will need Flash 8 or better to view this content.
+</div>
+<br/>
+  <% if current_user %>
+    <% if current_user.id == @user.id %>
+      <%= link_to 'Edit', edit_video_path(@video) %>
+    <% end %>
+  <% end %>
+
+<% if current_user %>
+<button id="saveButton" value="Insert Comment">Insert Message at this point</button>
+<% else %>
+<p><span id="notLoggedIn">You must log in to post comments</span></p>
+<% end %>
+
+<%= link_to 'See all comments', all_comments_path(@video) %>
+
+<div id="message"></div>
+
+<% if current_user %>
+  <%=form_for([@video, @video.comments.build], :html => {:id => "saveForm" }) do |f| %>
+      <div class="field">
+        <%= f.label :time %><br />
+        <%= f.text_field :time, :style=>"width:40px;"%> seconds
+      </div>
+
+      <div class="field">
+        <%= f.label :body %><br />
+        <%= f.text_area :body %>
+      </div>
+
+      <%= f.hidden_field :video_id, :value => @video.id %>
+      <%= f.hidden_field :user_id, :value => current_user.id %>
+       <input type="button" id="submit_comment" value="Add Comment"></button>
+  <% end %>
+<% end %>
+
+<script type="text/javascript">
+  var params = { allowScriptAccess: "always" };
+  var atts = { id: "myytplayer" };
+  var speed = 1000;
+  var messages = {};
+
+  $(document).ready(function() {
+    $("#saveForm").hide();
+
+      $.getJSON(
+          'http://localhost:3000/videos/<%= @video.id %>.json',
+          function(jsonData) {
+            $.each(jsonData, function(key, val) {
+              messages[key] = { userfield:val['user'], bodyfield:val['body']};
+              //console.log("key:" + key + " Object:" + messages[key])
+              // messages.push({time: key, userfield: val['user'], bodyfield: val['body']});
+
+            });
+          });
+
+    $('#saveButton').click(function() {
+        ytplayer.pauseVideo();
+        $("#comment_time").val(Math.floor(ytplayer.getCurrentTime()));
+        $("#saveForm").show();
+    });
+
+    $('#submit_comment').click(function() {
+        var comment_object = {
+          'time': $("#comment_time").val(),
+          'body': $("#comment_body").val(),
+          'user_id': $("#comment_user_id").val(),
+        };
+
+        $.ajax({
+            url: "/videos/<%=  @video.id %>/comments", //sumbits it to the given url of the form
+            data: JSON.stringify(comment_object),
+            type: "POST",
+            contentType:"application/json",
+            dataType: "json", // you want a difference between normal and ajax-calls, and json is standard
+            success: function(json){
+              videoTime = Math.floor(ytplayer.getCurrentTime());
+              
+              var newMessage = '<p class="message message' + videoTime + '"><span class="user-name"><%= User.find(current_user.id).username %> :</span><br />"' + $("#comment_body").val() + "</p>";
+              $('#message').append(newMessage);
+
+              console.log(json);
+              $("#comment_time").val("");
+              $("#comment_body").val("");
+              ytplayer.playVideo();
+              $("#saveForm").hide();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+              console.log(textStatus);
+              alert("Sorry something went wrong, your message didn't submit");
+            }
+          });
+    });
+  });
+
+  swfobject.embedSWF("http://www.youtube.com/v/<%= @substring %>&enablejsapi=1&playerapiid=ytplayer", "ytapiplayer", "425", "365", "8", null, null, params, atts);
+
+  function onYouTubePlayerReady(playerId) {
+    ytplayer = document.getElementById("myytplayer");
+
+    if (ytplayer) {
+      ytplayer.playVideo();
+      
+      setInterval(rotate, speed);
+    }
+  }
+
+  function rotate() {
+
+    if(ytplayer.getPlayerState() != 2){
+      videoTime = Math.floor(ytplayer.getCurrentTime());
+    
+      for(var ii = 0; ii <= (videoTime-10); ii++) {
+        $('.message'+ii ).fadeOut();
+      }
+
+      for(var k in messages){
+        if(k == videoTime){
+          var newMessage = '<p class="message message' + videoTime + '"><span class="user-name">' + messages[k]['userfield'] + ":</span><br />" + messages[k]['bodyfield'] + "</p>";
+
+          $('#message').append(newMessage);
+        }
+      }
+    }
+  }
+</script>

@@ -1,0 +1,28 @@
+<h1>All videos</h1>
+<% if current_user %>
+<h2><%= link_to 'Add Video', new_video_path %></h2>
+<% else %>
+<h2><%= link_to "Log in", log_in_path %> or <%= link_to "sign up", sign_up_path %> to add a video</h2>
+<% end %>
+
+<div id="videos-list">
+  <% @videos.each do |video| %>
+
+    <div class="video">
+      <h3><%= video.title %></h3>
+      <p>
+        <%= link_to image_tag("http://img.youtube.com/vi/" + video.url[-11..video.url.length] + "/0.jpg", :height=>160, :width=>200), video %>
+      </p>
+      <p>
+       Comments: <%= video.comments.count %>
+      </p>
+      <% if current_user %>
+        <% if current_user.id == video.user_id %>
+          <%= link_to 'Edit', edit_video_path(video) %> |
+          <%= link_to 'Delete', video, method: :delete, data: { confirm: 'Are you sure?' } %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+</div>

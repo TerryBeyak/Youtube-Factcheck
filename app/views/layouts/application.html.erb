@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Factcheck</title>
+  <%= stylesheet_link_tag    "application", :media => "all" %>
+  <%= javascript_include_tag "application" %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+	<div id="user_nav">
+		<p>
+		  <% if current_user %>
+		    Logged in as <%= current_user.username %>
+		    <%= link_to "Log out", log_out_path %>
+		  <% else %>
+		    <%= link_to "Sign up", sign_up_path %> or
+		    <%= link_to "log in", log_in_path %>
+		  <% end %>
+	  	</p>
+	  	<!-- <p>
+	  		<% if current_user %>
+	  			<%= link_to 'Edit my profile', edit_user_path(current_user) %>
+	  		<% end %>
+	  	</p> -->
+	</div>
+
+	<div id="content">
+	<header>
+		<h1>Fact-Check Youtube</h1>
+	</header>
+		<div id="content-inner">
+		<% if request.fullpath != videos_path %>
+			<h3><%= link_to "See all videos", videos_path %></h3>
+		<% end %>
+		
+		<% flash.each do |name, msg| %>
+		  <%= content_tag :div, msg, :id => "flash_#{name}" %>
+		<% end %>
+
+		<%= yield %>
+
+
+		<footer>A Side-Project by <%= link_to "Bluebird Interactive", "http://www.bluebirdinteractive.net"%></footer>
+		</div>
+	</div>
+
+</body>
+</html>
